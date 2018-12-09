@@ -1,5 +1,5 @@
-import {Observable, bindCallback, from, fromEventPattern} from "rxjs";
-import {map} from "rxjs/operators";
+import {Observable, bindCallback, from} from "rxjs";
+import {Event} from "./Utility/Event";
 
 type TabsEvents =
     'Created'
@@ -23,7 +23,7 @@ export class Tabs {
         return bindCallback(chrome.tabs.getCurrent)();
     }
 
-    static create(createProperties: chrome.tabs.CreateProperties = {}) {
+    static create(createProperties: chrome.tabs.CreateProperties = {}): Observable<chrome.tabs.Tab> {
         return bindCallback(chrome.tabs.create)(createProperties);
     }
 
@@ -101,24 +101,58 @@ export class Tabs {
         return bindCallback<number, chrome.tabs.Tab | undefined>(chrome.tabs.discard)(tabId);
     }
 
-    static onCreated(): Observable<chrome.tabs.Tab> {
-        return Tabs.on<chrome.tabs.Tab>('Created');
+    /**
+     * Events
+     */
+
+    static onCreated<T=Type.Tabs.CreatedInfo>(): Observable<T> {
+        return Tabs.remapEvent<T>('Created', ['tab']);
     }
 
-    static onUpdated(): Observable<chrome.tabs.Tab> {
-        return Tabs.on<any>('Updated');
+    static onUpdated<T=Type.Tabs.UpdatedInfo>(): Observable<T> {
+        return Tabs.remapEvent<T>('Updated', ['tabId', 'changeInfo', 'tab']);
     }
 
-    static onActivated(): Observable<chrome.tabs.TabActiveInfo> {
-        return Tabs.on<chrome.tabs.TabActiveInfo>('Activated');
+    static onMoved<T=Type.Tabs.MovedInfo>(): Observable<T> {
+        return Tabs.remapEvent<T>('Moved', ['tabId', 'moveInfo']);
     }
 
-    private static on<T>(name: TabsEvents): Observable<T> {
-        let tabs: any = chrome.tabs;
-        let eventObject: chrome.events.Event<any> = tabs['on' + name];
-        return fromEventPattern<T>(
-            (handler: (handlerArg?: T) => any) => eventObject.addListener(handler),
-            (handler: (handlerArg?: T) => any) => eventObject.removeListener(handler)
-        );
+    static onActivated<T=Type.Tabs.ActivatedInfo>(): Observable<T> {
+        return Tabs.remapEvent<T>('Activated', ['activeInfo']);
+    }
+
+    static onHighlighted<T=Type.Tabs.HighlightedInfo>(): Observable<T> {
+        return Tabs.remapEvent<T>('Highlighted', ['highlightInfo']);
+    }
+
+    static onDetached<T=Type.Tabs.DetachedInfo>(): Observable<T> {
+        return Tabs.remapEvent<T>('Detached', ['tabId', 'detachInfo']);
+    }
+
+    static onAttached<T=Type.Tabs.AttachedInfo>(): Observable<T> {
+        return Tabs.remapEvent<T>('Attached', ['tabId', 'attachInfo']);
+    }
+
+    static onRemoved<T=Type.Tabs.RemovedInfo>(): Observable<T> {
+        return Tabs.remapEvent<T>('Removed', ['tabId', 'removeInfo']);
+    }
+
+    static onReplaced<T=Type.Tabs.ReplacedInfo>(): Observable<T> {
+        return Tabs.remapEvent<T>('Replaced', ['addedTabId', 'removedTabId']);
+    }
+
+    static onZoomChange<T=Type.Tabs.ZoomChangeInfo>(): Observable<T> {
+        return Tabs.remapEvent<T>('ZoomChange', ['ZoomChangeInfo']);
+    }
+
+    /**
+     * Local event remaper
+     *
+     * @param {TabsEvents} name
+     * @param {string[]} argNames
+     * @returns {Observable<T>}
+     */
+    private static remapEvent<T>(name: TabsEvents, argNames: string[]): Observable<T> {
+        return Event.remapEvent<TabsEvents, T>(chrome.tabs, name, argNames);
     }
 }
