@@ -66,6 +66,6 @@ export class BrowserAction {
      * @returns {Observable<T>}
      */
     private static remapEvent<T>(name: BrowserActionEvents, argNames: string[] = []): Observable<T> {
-        return Event.remapEvent<BrowserActionEvents, T>(chrome.tabs, name, argNames);
+        return Event.remapEvent<BrowserActionEvents, T>(chrome.browserAction, name, argNames);
     }
 }

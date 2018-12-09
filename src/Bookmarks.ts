@@ -96,6 +96,6 @@ export class Bookmarks {
      * @returns {Observable<T>}
      */
     private static remapEvent<T>(name: BookmarksEvents, argNames: string[] = []): Observable<T> {
-        return Event.remapEvent<BookmarksEvents, T>(chrome.tabs, name, argNames);
+        return Event.remapEvent<BookmarksEvents, T>(chrome.bookmarks, name, argNames);
     }
 }

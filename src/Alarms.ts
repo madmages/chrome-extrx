@@ -40,6 +40,6 @@ export class Alarms {
      * @returns {Observable<T>}
      */
     private static remapEvent<T>(name: AlarmEvents, argNames: string[]): Observable<T> {
-        return Event.remapEvent<AlarmEvents, T>(chrome.tabs, name, argNames);
+        return Event.remapEvent<AlarmEvents, T>(chrome.alarms, name, argNames);
     }
 }
