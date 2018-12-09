@@ -1,4 +1,5 @@
-import {Observable, bindCallback, fromEventPattern} from 'rxjs';
+import {Observable, bindCallback} from 'rxjs';
+import {Event} from "./Utility/Event";
 
 type BookmarksEvents =
     'Created'
@@ -55,40 +56,46 @@ export class Bookmarks {
         return bindCallback<string, void>(chrome.bookmarks.removeTree)(id);
     }
 
-    static onCreated(): Observable<[string, chrome.bookmarks.BookmarkTreeNode]> {
-        return Bookmarks.on('Created');
+    /**
+     * Events
+     */
+
+    static onCreated<T=Type.Bookmarks.CreatedInfo>(): Observable<T> {
+        return Bookmarks.remapEvent<T>('Created', ['id', 'bookmark']);
     }
 
-    static onRemoved(): Observable<[string, chrome.bookmarks.BookmarkRemoveInfo]> {
-        return Bookmarks.on('Removed');
+    static onRemoved<T=Type.Bookmarks.RemovedInfo>(): Observable<T> {
+        return Bookmarks.remapEvent<T>('Removed', ['id', 'removeInfo']);
     }
 
-    static onChanged(): Observable<[string, chrome.bookmarks.BookmarkChangeInfo]> {
-        return Bookmarks.on('Changed');
+    static onChanged<T=Type.Bookmarks.ChangedInfo>(): Observable<T> {
+        return Bookmarks.remapEvent<T>('Changed', ['id', 'changeInfo']);
     }
 
-    static onMoved(): Observable<[string, chrome.bookmarks.BookmarkMoveInfo]> {
-        return Bookmarks.on('Moved');
+    static onMoved<T=Type.Bookmarks.MovedInfo>(): Observable<T> {
+        return Bookmarks.remapEvent<T>('Moved', ['id', 'moveInfo']);
     }
 
-    static onChildrenReordered(): Observable<[string, chrome.bookmarks.BookmarkReorderInfo]> {
-        return Bookmarks.on('ChildrenReordered');
+    static onChildrenReordered<T=Type.Bookmarks.ChildrenReorderedInfo>(): Observable<T> {
+        return Bookmarks.remapEvent<T>('ChildrenReordered', ['id', 'reorderInfo']);
     }
 
-    static onImportBegan(): Observable<void> {
-        return Bookmarks.on('ImportBegan');
+    static onImportBegan<T=void>(): Observable<T> {
+        return Bookmarks.remapEvent<T>('ImportBegan');
     }
 
-    static onImportEnded(): Observable<void> {
-        return Bookmarks.on('ImportEnded');
+    static onImportEnded<T=void>(): Observable<T> {
+        return Bookmarks.remapEvent<T>('ImportEnded');
     }
 
-    private static on<T>(name: BookmarksEvents): Observable<T> {
-        let tabs: any = chrome.bookmarks;
-        let eventObject: chrome.events.Event<any> = tabs['on' + name];
-        return fromEventPattern<T>(
-            (h: () => T) => eventObject.addListener(h),
-            (h: () => T) => eventObject.removeListener(h)
-        );
+    /**
+     * Local event remaper
+     *
+     * @param {TabsEvents} name
+     * @param {string[]} argNames
+     * @returns {Observable<T>}
+     */
+    private static remapEvent<T>(name: BookmarksEvents, argNames: string[] = []): Observable<T> {
+        return Event.remapEvent<BookmarksEvents, T>(chrome.tabs, name, argNames);
     }
 }

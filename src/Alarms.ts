@@ -1,4 +1,5 @@
-import {Observable, from, bindCallback, fromEventPattern} from 'rxjs';
+import {Observable, from, bindCallback} from 'rxjs';
+import {Event} from "./Utility/Event";
 
 type AlarmEvents = 'Alarm';
 
@@ -23,16 +24,22 @@ export class Alarms {
         return bindCallback<boolean>(chrome.alarms.clearAll)();
     }
 
-    static onAlarm(): Observable<chrome.alarms.Alarm> {
-        return Alarms.on<chrome.alarms.Alarm>('Alarm');
+    /**
+     * Events
+     */
+
+    static onAlarm<T=Type.Alarms.AlarmInfo>(): Observable<T> {
+        return Alarms.remapEvent<T>('Alarm', ['alarm']);
     }
 
-    static on<T>(name: AlarmEvents): Observable<T> {
-        let tabs: any = chrome.alarms;
-        let eventObject: chrome.events.Event<any> = tabs['on' + name];
-        return fromEventPattern<T>(
-            (h: () => T) => eventObject.addListener(h),
-            (h: () => T) => eventObject.removeListener(h)
-        );
+    /**
+     * Local event remaper
+     *
+     * @param {TabsEvents} name
+     * @param {string[]} argNames
+     * @returns {Observable<T>}
+     */
+    private static remapEvent<T>(name: AlarmEvents, argNames: string[]): Observable<T> {
+        return Event.remapEvent<AlarmEvents, T>(chrome.tabs, name, argNames);
     }
 }
