@@ -1,0 +1,14 @@
+{
+  "name": "chrome-extrx",
+  "version": "0.0.1",
+  "description": "Reactive chrome extension API",
+  "main": "index.ts",
+  "author": "madmages",
+  "license": "MIT",
+  "dependencies": {
+    "rxjs": "6.3.3"
+  },
+  "devDependencies": {
+    "@types/chrome": "latest"
+  }
+}
